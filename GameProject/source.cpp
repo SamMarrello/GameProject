@@ -36,7 +36,7 @@ void current_gamestate(int& acres, int& population, int& year, int& bushels, str
 	cout << "It is the " << year << st << " year of your reign, noble king!\n"
 		 << "Our city currently has " << acres << " acres available for cultivation \n"
 		 << "We count " << population << " citizens \n"
-		 << "Our granaries hold " << bushels << " bushels of grain";
+		 << "Our granaries hold " << bushels << " bushels of grain \n";
 }
 
 void orders(int& planted_acres, int& food, int& bushels, string& user_input, int& land_purchase) {
@@ -49,67 +49,70 @@ void orders(int& planted_acres, int& food, int& bushels, string& user_input, int
 	cout << "Should we purchase more fields to grow our city? Put the number of acres you want to buy below" << endl;
 	cin >> land_purchase;
 }
-//population functions
+//pop growth and under the hood functions
 
-int migration(int migrants) {
-	migrants = rand() % 100;
-	return migrants;
-}
-
-int pop_growth(int population, int migrants) {
+float pop_growth(int population, int food, int migrants) {
+	if (food / population < 20) {
+		return food / 20.0;
+	}
 	population = population * 1.05;
-	migrants = migration(migrants);
+	migrants = rand() % 100;
 	population = migrants + population;
 	return population;
 }
 
-//food and starvation
-
-int starvation(int population, int food) {
-	if (food / population < 20) {
-		while (food / population < 20)
-			population = population =- ;
-		cout << "Your population has starved, my lord!";
+float planting(int food, int planted_acres, int bushels) {
+	bushels = bushels - planted_acres;
+	bushels = planted_acres * 3;
+	return bushels;
 }
 
-float year_end(int population, int food, int bushels, int land_purchase, int planted_acres, int year); {
-	year = year += ;
+void end_turn(int& year, int& population, int& bushels, int food, int migrants, int planted_acres, int acres, string st) {
+	year++;
+	bushels = bushels - food;
+	population = pop_growth(population, food, migrants);
+	bushels = planting(bushels, planted_acres, bushels);
+	current_gamestate(acres, population, year, bushels, st);
 }
 
+//main game turn, calculating everything you did over the year
 
-	int main();
+int main() {
+	/*my take on the popular game Hammurabi. Basically, you play for 10 years, each turn being a year.
+	* Each citizen eats 20 bushels of grain a year
+	* A bushel can be used either as food, to plant a field for the next year, or to buy and sell land
+	* land can be bought at year start. You don't have to plant or use all your food, but still
+	* Random events can negatively or positively add to your harvest
+	* If all your citizens die, you lose. If more than 25% of your citizens starve, they'll kick you out
+	*/
+
+	//housekeeping, init variables 
+	int acres, population, year, bushels, food, planted_acres, land_purchase, migrants = 0, pop_increase, pop_decline, harvest;
+	string user_input, st;
+
+	//beginning values & functions
+
+	refresh_gamestate(acres, population, year, bushels);
+
+	// begining of main game
+
+	cout << "Welcome to Sam's Hammurabi! \n";
+
+	while (year <= 10)
 	{
-		/*my take on the popular game Hammurabi. Basically, you play for 10 years, each turn being a year.
-		* Each citizen eats 20 bushels of grain a year
-		* A bushel can be used either as food, to plant a field for the next year, or to buy and sell land
-		* land can be bought at year start. You don't have to plant or use all your food, but still
-		* Random events can negatively or positively add to your harvest
-		* If all your citizens die, you lose. If more than 25% of your citizens starve, they'll kick you out
-		*/
+		current_gamestate(acres, population, year, bushels, st);
+		orders(planted_acres, food, bushels, user_input, land_purchase);
+		end_turn(population, bushels, year, food, migrants, planted_acres, acres, st);
 
-		//housekeeping, init variables 
-		int acres, population, year, bushels, food, planted_acres, land_purchase, migrants;
-		string user_input, st;
-
-		//beginning values & functions
-
-		refresh_gamestate(acres, population, year, bushels);
-
-		// begining of main game
-
-		cout << "Welcome to Sam's Hammurabi! \n";
-
-		while (year <= 10)
+		if (year == 10)
 		{
+			cout << "You have ruled 10 years, and made a name for yourself as the fairest ruler of Mesopotamia!" << endl;
+		}
+		if (user_input == "yes")
+		{
+			refresh_gamestate(acres, population, year, bushels);
 			current_gamestate(acres, population, year, bushels, st);
 			orders(planted_acres, food, bushels, user_input, land_purchase);
-
-
-
-			if (user_input == "restart")
-			{
-				refresh_gamestate(acres, population, year, bushels);
-				orders(planted_acres, food, bushels, user_input, land_purchase);
-			}
 		}
 	}
+}
