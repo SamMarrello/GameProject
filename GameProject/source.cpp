@@ -7,11 +7,12 @@ using namespace std;
 
 //setting up game, giving orders
 
-void refresh_gamestate(int& acres, int& population, int& year, int& bushels) {
+void refresh_gamestate(int& acres, int& population, int& year, int& bushels, int& land_cost) {
 	acres = 1000;
 	population = 100;
 	year = 1;
 	bushels = 2800;
+	land_cost = 1;
 }
 
 void current_gamestate(int& acres, int& population, int& year, int& bushels, string& st){
@@ -39,13 +40,14 @@ void current_gamestate(int& acres, int& population, int& year, int& bushels, str
 		 << "Our granaries hold " << bushels << " bushels of grain \n";
 }
 
-void orders(int& planted_acres, int& food, int& bushels, string& user_input, int& land_purchase) {
+void orders(int& planted_acres, int& food, int& bushels, string& user_input,int& land_cost, int& land_purchase) {
 	cout << "Do you want to restart the game? If so, type 'restart'" << endl;
 	cin >> user_input;
 	cout << "How many acres shall we plant this year?" << endl;
 	cin >> planted_acres;
 	cout << "How many bushels shall we budget to feed our people?" << endl;
 	cin >> food;
+	cout << "The Dinar per acre for this year is " << land_cost << endl;
 	cout << "Should we purchase more fields to grow our city? Put the number of acres you want to buy below" << endl;
 	cin >> land_purchase;
 }
@@ -67,11 +69,14 @@ float planting(int food, int planted_acres, int bushels) {
 	return bushels;
 }
 
-void end_turn(int& year, int& population, int& bushels, int food, int migrants, int planted_acres, int acres, string st) {
+void end_turn(int& year, int& population, int& bushels, int food, int migrants, int planted_acres, int acres, string st, int land_cost, int land_purchase) {
+	cout << "entering the year " << year << endl;
 	year++;
 	bushels = bushels - food;
 	population = pop_growth(population, food, migrants);
 	bushels = planting(bushels, planted_acres, bushels);
+	land_cost = rand() % 5;
+	acres += land_purchase;
 	current_gamestate(acres, population, year, bushels, st);
 }
 
@@ -87,12 +92,12 @@ int main() {
 	*/
 
 	//housekeeping, init variables 
-	int acres, population, year, bushels, food, planted_acres, land_purchase, migrants = 0, pop_increase, pop_decline, harvest;
+	int acres, population, year = 0, bushels, food, planted_acres, land_purchase, migrants = 0, pop_increase, pop_decline, land_cost, win = 0, loss = 0;
 	string user_input, st;
 
 	//beginning values & functions
 
-	refresh_gamestate(acres, population, year, bushels);
+	refresh_gamestate(acres, population, year, bushels, land_cost);
 
 	// begining of main game
 
@@ -101,18 +106,36 @@ int main() {
 	while (year <= 10)
 	{
 		current_gamestate(acres, population, year, bushels, st);
-		orders(planted_acres, food, bushels, user_input, land_purchase);
-		end_turn(population, bushels, year, food, migrants, planted_acres, acres, st);
-
-		if (year == 10)
+		orders(planted_acres, food, bushels, user_input, land_cost, land_purchase);
+		end_turn(year, population, bushels, food, migrants, planted_acres, acres, st, land_cost, land_purchase);
+	
+		if (user_input == "restart" || user_input == "Restart")
 		{
-			cout << "You have ruled 10 years, and made a name for yourself as the fairest ruler of Mesopotamia!" << endl;
-		}
-		if (user_input == "yes")
-		{
-			refresh_gamestate(acres, population, year, bushels);
+			refresh_gamestate(acres, population, year, bushels, land_cost);
 			current_gamestate(acres, population, year, bushels, st);
-			orders(planted_acres, food, bushels, user_input, land_purchase);
+			orders(planted_acres, food, bushels, user_input, land_cost, land_purchase);
+		}
+
+		if (population <= 50)
+		{
+			break;
 		}
 	}
+	
+	if (year == 10 && population != 0)
+	{
+		cout << "Success! You have finished your governorship without incident" << endl;
+		win++;
+	}
+	else if (population == 50)
+	{
+		cout << "Failure! Your people have thrown you out due to your sheer incompetence" << endl;
+		loss++;
+	}
+	else if (population == 0)
+	{
+		cout << "Failure! Your name will go down in history as the biggest goof of Mesopotamia!" << endl;
+		loss++;
+	}
+
 }
